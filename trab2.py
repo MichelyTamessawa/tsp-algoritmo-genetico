@@ -20,9 +20,8 @@ class Solucao:
     # def __lt__(self, other):
     #     return self.custo() < other.custo()
 
-custos = {
+custos = {}
 
-}
 def dist_euclidiana(v1, v2):
     return math.sqrt(pow(v1.x - v2.x, 2) + pow(v1.y - v2.y, 2)) 
 
@@ -36,9 +35,9 @@ def custo(vertices):
 
         for i in range(len(vertices)):
             if i != len(vertices) - 1:
-                soma+= dist_euclidiana(vertices[i], vertices[i+1])
+                soma += dist_euclidiana(vertices[i], vertices[i+1])
             else:
-                soma+= dist_euclidiana(vertices[i], vertices[0])
+                soma += dist_euclidiana(vertices[i], vertices[0])
 
         custos[tupla_vertices] = soma
 
@@ -46,6 +45,8 @@ def custo(vertices):
 
 # Pra calcular o custo utilizar distancha euclediana entre cada vertice
 # Talvez utilizar tecnica de memo pra salvar os custos ja calculados pra soluções iguais
+# calcular o custo de cada vertice para todos os outros
+
 def getCoordenadas(index, arquivo):
     lista = arquivo[index+1:len(arquivo)-1]
     listaVertices = []
@@ -57,9 +58,18 @@ def getCoordenadas(index, arquivo):
 
     return listaVertices
 
-def select(vertices):
-    print('')
+def select(populacao):
+    randomIndex1 = random.randint(0, len(populacao)//2)
+    randomIndex2 = random.randint(0, len(populacao)//2)
+    randomIndex3 = random.randint(0, len(populacao)//2)
     
+    if populacao[randomIndex1].custo < populacao[randomIndex2].custo and populacao[randomIndex1].custo < populacao[randomIndex3].custo:
+        return populacao[randomIndex1]
+    elif populacao[randomIndex2].custo < populacao[randomIndex1].custo and populacao[randomIndex2].custo < populacao[randomIndex3].custo:
+        return populacao[randomIndex2]
+    else:
+        return populacao[randomIndex3]
+
 def crossover(vertices):
     print('')
 
@@ -82,11 +92,21 @@ def geneticTsp(vertices):
 
     while maxGer < 1000: ## condição de parada
         ## toda vez que adicionar uma geração incrementar o maxGer
-        print('kkkkkk')
+
+        # Selecao por Torneio
+        pai1 = select(populacao)
+        pai2 = select(populacao)
+        
+        # Cruzamento
+
+        # att da pop
 
 def main(arquivoEntrada):
+    random.seed()
+
     f = open(arquivoEntrada, "r")
     arquivo = f.readlines()
+
     nome = ""
     tipo = ""
     comentario = ""
