@@ -2,6 +2,9 @@ import sys
 import copy
 import random
 import math
+import heapq
+
+custos = {}
 
 class vertice:
     def __init__(self, indice, x, y):
@@ -12,18 +15,20 @@ class vertice:
     def __str__(self):
         return "indice:% s x:% s y:% s" % (self.indice, self.x, self.y)
 
+
 class Solucao:
     def __init__(self, caminho = [], custo = -1):
         self.caminho = caminho
         self.custo = custo
 
-    # def __lt__(self, other):
-    #     return self.custo() < other.custo()
+    def __lt__(self, other):
+        return self.custo() < other.custo()
 
-custos = {}
+
 
 def dist_euclidiana(v1, v2):
     return math.sqrt(pow(v1.x - v2.x, 2) + pow(v1.y - v2.y, 2)) 
+
 
 def custo(vertices):
     global custos
@@ -58,6 +63,7 @@ def getCoordenadas(index, arquivo):
 
     return listaVertices
 
+
 def select(populacao):
     randomIndex1 = random.randint(0, len(populacao)//2)
     randomIndex2 = random.randint(0, len(populacao)//2)
@@ -70,25 +76,85 @@ def select(populacao):
     else:
         return populacao[randomIndex3]
 
-def crossover(vertices):
-    print('')
 
-def mutation(vertices):
-    print('')
+def crossover(pai1, pai2):
+    tamCorte = int(len(pai1) * 0.7)
 
-def updatePopulation(vertices):
-    print('')
+    filho1 = pai1[:tamCorte]
+    filho2 = pai2[:tamCorte]
+
+    aux1 = list(set(pai2) - set(filho1))
+    aux2 = list(set(pai1) - set(filho2))
+
+    for x in aux1:
+        filho1.append(x)
+
+    for x in aux2:
+        filho2.append(x)
+
+    filho1 = mutation(filho1)
+    filho2 = mutation(filho2)
+
+    solucao1 = firstImprovement(Solucao(filho1, custo(filho1)))
+    solucao2 = firstImprovement(Solucao(filho2, custo(filho2)))
+
+    return solucao1, solucao2
+
+
+def mutation(filho):
+    v1 = random.randint(len(filho) - 1)
+    v2 = random.randint(v1, len(filho) - 1)
+
+    filho[v1], filho[v2] = filho[v2], filho[v1]
+
+    return filho
+
+
+def generatorNeighboor(solucao, i):
+    novaSolucao = solucao.deepcopy()
+    novaSolucao.caminho[i], novaSolucao.caminho[i+1] = novaSolucao.caminho[i+1], novaSolucao.caminho[i]
+    novaSolucao.custo = custo(novaSolucao.caminho)
+    return novaSolucao
+
+
+def firstImprovement(solucao):
+    melhoria = False
+    novaSolucao = solucao
+    i = 0
+
+    while not melhoria and i < len(solucao.vertices):
+        vizinho = generatorNeighboor(solucao, i)
+
+        if (vizinho.custo < solucao.custo):
+            novaSolucao = vizinho
+            melhoria = True
+        
+        i += 1
+
+    return novaSolucao
+
+
+def updatePopulation(populacao, solucao):
+    maiorCusto = heapq.nlargest(1, populacao)[0]
+    
+    if maiorCusto > solucao.custo:
+        heapq.heappush(populacao, solucao)
+    
+    return populacao    
+
 
 def geneticTsp(vertices):
     maxGer = 0
-    populacao = [] ## chave é o caminho da solução e valor é o custo
+    populacao = [] ## lista de soluções
+    heapq.heapify(populacao)
 
-    populacao.append(Solucao(vertices, custo(vertices)))
+    heapq.heappush(populacao, Solucao(vertices, custo(vertices)))
 
     secondSon = vertice.deepcopy()
     random.suffle(secondSon)
 
-    populacao.append(Solucao(secondSon, custo(secondSon)))
+    #populacao.append(Solucao(secondSon, custo(secondSon)))
+    heapq.heappush(populacao, Solucao(secondSon, custo(secondSon)))
 
     while maxGer < 1000: ## condição de parada
         ## toda vez que adicionar uma geração incrementar o maxGer
@@ -97,9 +163,13 @@ def geneticTsp(vertices):
         pai1 = select(populacao)
         pai2 = select(populacao)
         
-        # Cruzamento
+        # Cruzamento, mutacao e busca local
+        solucao1, solucao2 = crossover(pai1, pai2)
 
-        # att da pop
+        # att da population
+        populacao = updatePopulation(populacao, solucao1)
+        populacao = updatePopulation(populacao, solucao2)
+
 
 def main(arquivoEntrada):
     random.seed()
