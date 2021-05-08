@@ -5,12 +5,13 @@ import math
 import heapq
 
 custos = {}
+maxGer = 0
 
 class vertice:
     def __init__(self, indice, x, y):
         self.indice = indice
-        self.x = x
-        self.y = y
+        self.x = int(x)
+        self.y = int(y)
 
     def __str__(self):
         return "indice:% s x:% s y:% s" % (self.indice, self.x, self.y)
@@ -22,7 +23,7 @@ class Solucao:
         self.custo = custo
 
     def __lt__(self, other):
-        return self.custo() < other.custo()
+        return self.custo < other.custo
 
 
 
@@ -78,13 +79,16 @@ def select(populacao):
 
 
 def crossover(pai1, pai2):
-    tamCorte = int(len(pai1) * 0.7)
+    caminho1 = pai1.caminho
+    caminho2 = pai2.caminho
 
-    filho1 = pai1[:tamCorte]
-    filho2 = pai2[:tamCorte]
+    tamCorte = int(len(caminho1) * 0.7)
 
-    aux1 = list(set(pai2) - set(filho1))
-    aux2 = list(set(pai1) - set(filho2))
+    filho1 = caminho1[:tamCorte]
+    filho2 = caminho2[:tamCorte]
+
+    aux1 = list(set(caminho1) - set(filho1))
+    aux2 = list(set(caminho2) - set(filho2))
 
     for x in aux1:
         filho1.append(x)
@@ -102,7 +106,7 @@ def crossover(pai1, pai2):
 
 
 def mutation(filho):
-    v1 = random.randint(len(filho) - 1)
+    v1 = random.randint(0, len(filho) - 1)
     v2 = random.randint(v1, len(filho) - 1)
 
     filho[v1], filho[v2] = filho[v2], filho[v1]
@@ -111,7 +115,7 @@ def mutation(filho):
 
 
 def generatorNeighboor(solucao, i):
-    novaSolucao = solucao.deepcopy()
+    novaSolucao = copy.deepcopy(solucao)
     novaSolucao.caminho[i], novaSolucao.caminho[i+1] = novaSolucao.caminho[i+1], novaSolucao.caminho[i]
     novaSolucao.custo = custo(novaSolucao.caminho)
     return novaSolucao
@@ -122,7 +126,7 @@ def firstImprovement(solucao):
     novaSolucao = solucao
     i = 0
 
-    while not melhoria and i < len(solucao.vertices):
+    while not melhoria and i < len(solucao.caminho):
         vizinho = generatorNeighboor(solucao, i)
 
         if (vizinho.custo < solucao.custo):
@@ -135,28 +139,31 @@ def firstImprovement(solucao):
 
 
 def updatePopulation(populacao, solucao):
-    maiorCusto = heapq.nlargest(1, populacao)[0]
-    
-    if maiorCusto > solucao.custo:
+    global maxGer
+    maiorSolucao = heapq.nlargest(1, populacao)[0]
+
+    if maiorSolucao.custo > solucao.custo:
         heapq.heappush(populacao, solucao)
-    
+        maxGer += 1
+
     return populacao    
 
 
 def geneticTsp(vertices):
-    maxGer = 0
+    global maxGer
     populacao = [] ## lista de soluções
     heapq.heapify(populacao)
 
     heapq.heappush(populacao, Solucao(vertices, custo(vertices)))
 
-    secondSon = vertice.deepcopy()
-    random.suffle(secondSon)
+    secondSon = copy.deepcopy(vertices)
+    random.shuffle(secondSon)
 
     #populacao.append(Solucao(secondSon, custo(secondSon)))
     heapq.heappush(populacao, Solucao(secondSon, custo(secondSon)))
 
     while maxGer < 1000: ## condição de parada
+        print('maxGer:', maxGer)
         ## toda vez que adicionar uma geração incrementar o maxGer
 
         # Selecao por Torneio
@@ -169,6 +176,13 @@ def geneticTsp(vertices):
         # att da population
         populacao = updatePopulation(populacao, solucao1)
         populacao = updatePopulation(populacao, solucao2)
+
+    menorSolucao = heapq.nsmallest(1, populacao)[0]
+    maiorSolucao = heapq.nlargest(1, populacao)[0]
+    print('Maior custo:', maiorSolucao.custo)
+    print('Menor custo:', menorSolucao.custo)
+
+
 
 
 def main(arquivoEntrada):
