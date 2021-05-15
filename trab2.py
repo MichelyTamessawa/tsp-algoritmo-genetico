@@ -144,7 +144,6 @@ def updatePopulation(populacao, solucao):
 
     if maiorSolucao.custo > solucao.custo:
         heapq.heappush(populacao, solucao)
-        maxGer += 1
 
     return populacao    
 
@@ -176,6 +175,8 @@ def geneticTsp(vertices):
         # att da population
         populacao = updatePopulation(populacao, solucao1)
         populacao = updatePopulation(populacao, solucao2)
+        maxGer += 1
+
 
     menorSolucao = heapq.nsmallest(1, populacao)[0]
     maiorSolucao = heapq.nlargest(1, populacao)[0]
